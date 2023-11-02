@@ -1,3 +1,15 @@
+# Build and Release Folders
+temp_file/*
+main*
+translate*
+table_to_sql.py
+log_module/log/**
+connector/**
+bin-debug/
+bin-release/
+[Oo]bj/
+[Bb]in/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
