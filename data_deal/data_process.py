@@ -221,6 +221,7 @@ class data_process():
 
     def CNN_LSTM(self):
 
+
     def logistic(self):
 
     def
