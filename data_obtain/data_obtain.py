@@ -62,13 +62,13 @@ class data_obtain():
 
         self.is_oot = None
 
-
-    def download(self):
-        # 文件路径
+        #文件路径
         self.data_dir = '{}/temp_file/raw_stock_data'.format(self.current_dir)
         if not os.path.isdir(self.data_dir):
             os.makedirs(self.data_dir)
 
+
+    def download(self):
         if self.data_source == 'yfinance':
             #英文code统一转换为小写，采用雅虎数据
             code_str = self.stock_code.lower()
@@ -206,10 +206,10 @@ class data_obtain():
         for i in drop_list:
             if i in data.columns:
                 data=data.drop(i,axis=1)
-        data.set_index(self.key_name,inplace=True)
         '''
         划分样本集,分离x与y
         '''
+        #self.is_oot控制是否划分样本外
         if type(self.config['train_len']) == float:
             train_len = self.config['train_len']
             train_point = math.floor(train_len * len(index_list))
@@ -254,24 +254,38 @@ class data_obtain():
         '''
         策略选择
         '''
-        #传统回归预测价格
+        #传统回归预测价格,预测价格
         if strategy == '1':
-            y_train = y_train_df.copy()
-            y_test = y_test_df.copy()
-            if self.is_oot:
-                y_oot = y_oot_df.copy()
-        #比前一天高就是好的
+            pass
+        #比前一天高就是好样本日
         elif strategy == '2':
             y_train_df = strategy_2(y_train_df,self.label_name)
             y_test_df = strategy_2(y_test_df,self.label_name)
             if self.is_oot:
                 y_oot_df = strategy_2(y_oot_df,self.label_name)
+                oot_data = pd.concat([x_oot_df, y_oot_df], axis=0)
+            train_data = pd.concat([x_train_df,y_train_df],axis=0)
+            test_data = pd.concat([x_test_df, y_test_df],axis=0)
+
         #滚动策略
         else:
             y_train_df = strategy_3(y_train_df,self.label_name)
             y_test_df = strategy_3(y_test_df,self.label_name)
             if self.is_oot:
                 y_oot_df = strategy_3(y_oot_df,self.label_name)
+                oot_data = pd.concat([x_oot_df, y_oot_df], axis=0)
+            train_data = pd.concat([x_train_df,y_train_df],axis=0)
+            test_data = pd.concat([x_test_df, y_test_df],axis=0)
+
+        self.clean_data_dir = '{}/temp_file/clean_stock_data'.format(self.current_dir)
+        #保存数据清洗结果
+        train_data.to_excel(f'{self.clean_data_dir}//',index=False)
+        test_data.to_excel(f'{self.clean_data_dir}//',index=False)
+        if self.is_oot:
+            oot_data.to_excel(f'{self.clean_data_dir}//',index=False)
+
+
+
 
 
 

@@ -4,12 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c36a85ad-e692-4b09-a545-b22073a6c037" name="更改" comment="路径创建">
-      <change afterPath="$PROJECT_DIR$/临时调用测试.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="c36a85ad-e692-4b09-a545-b22073a6c037" name="更改" comment="11-03">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/config.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_deal/data_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_deal/data_process.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_obtain/data_obtain.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_obtain/data_obtain.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -33,11 +29,11 @@
     <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;
   }
-}]]></component>
+}</component>
   <component name="GithubPullRequestsUISettings">
     <option name="selectedUrlAndAccountId">
       <UrlAndAccount>
@@ -219,7 +215,15 @@
       <option name="project" value="LOCAL" />
       <updated>1698252746228</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="11-03">
+      <option name="closed" value="true" />
+      <created>1699013482499</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1699013482499</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -239,6 +243,7 @@
     <MESSAGE value="ceshi1" />
     <MESSAGE value="ceshi2" />
     <MESSAGE value="路径创建" />
-    <option name="LAST_COMMIT_MESSAGE" value="路径创建" />
+    <MESSAGE value="11-03" />
+    <option name="LAST_COMMIT_MESSAGE" value="11-03" />
   </component>
 </project>
