@@ -67,6 +67,8 @@ class data_obtain():
         if not os.path.isdir(self.data_dir):
             os.makedirs(self.data_dir)
 
+        self.clean_data_dir = '{}/temp_file/clean_stock_data'.format(self.current_dir)
+
 
     def download(self):
         if self.data_source == 'yfinance':
@@ -180,19 +182,12 @@ class data_obtain():
                 print(f'本次数据库插入数据条数：{new_data.shape[0]}')
         return data
 
-
-
-
-
-
-
-
-    def data_clean(self):
+    def data_y_define(self):
         if self.method == '2':
             data = pd.read_excel(f'{self.data_dir}/{self.stock_code}.xlsx')
         else:
             data = self.con.get_data(f'select * from {self.stock_code}')
-        index_list = list(data.index)
+
 
         #数据清洗，按时间排序，转化日期格式，日期设置为索引，索引分钟线/日线/某只股票
         data[self.key_name]=pd.to_datetime(data[self.key_name])
@@ -207,15 +202,49 @@ class data_obtain():
             if i in data.columns:
                 data=data.drop(i,axis=1)
         '''
+        策略选择
+        '''
+        strategy = str(self.config['strategy'])
+        # 传统回归预测价格,预测价格
+        if strategy == '1':
+            data = data.rename(columns={self.label_name: 'target'})
+        # 比前一天高就是好样本日
+        elif strategy == '2':
+            data['shift'] = data[self.label_name].shift(1)
+            data['target'] = data['shift'] - data[self.label_name]
+            data['target'] = data['target'].map(lambda x: 'good' if x > 0 else 'bad')
+            data = data.drop(['shift',self.label_name], axis=1)
+        # 滚动策略
+        else:
+            data['shift'] = data[self.label_name].shift(1)
+            data['target'] = data['shift'] - data[self.label_name]
+            data['target'] = data['target'].map(lambda x: 'buy' if x > 0 else 'sell')
+            data = data.drop(['shift',self.label_name], axis=1)
+
+
+        # 删除空值占比大于30%的行
+        data.replace({'None': np.nan, None: np.nan}, inplace=True)
+        data['null_ratio'] = data.isnull().sum(axis='columns') / data.shape[1]
+        data = data.loc[data['null_ratio'] < 0.3, :].copy()
+        data.drop(columns=['null_ratio'], inplace=True)
+        data.to_excel(f'{self.clean_data_dir}//{self.stock_code}_total_data.xlsx', index=False)
+        return data
+
+
+    def data_split(self):
+        '''
         划分样本集,分离x与y
         '''
         #self.is_oot控制是否划分样本外
+        data = self.data_y_define()
+
+        index_list = list(data.index)
         if type(self.config['train_len']) == float:
             train_len = self.config['train_len']
             train_point = math.floor(train_len * len(index_list))
             train_data = data.loc[index_list[:train_point], :].copy()
             #分割测试集逻辑
-            if self.config['test_len'] is 'None':
+            if self.config['test_len'] == 'None':
                 self.is_oot = False
                 test_data = data.loc[index_list[train_point:], :].copy()
             else:
@@ -231,7 +260,7 @@ class data_obtain():
         else:
             train_len=pd.to_datetime(self.config['train_len'])
             train_data = data[data[self.key_name]<=train_len].copy()
-            if self.config['test_len'] is 'None':
+            if self.config['test_len'] == 'None':
                 test_data = data[data[self.key_name]>train_len].copy()
                 self.is_oot = False
             else:
@@ -243,7 +272,6 @@ class data_obtain():
                 else:
                     self.is_oot = False
         #定义好坏,分割x和y
-        strategy = str(self.config['strategy'])
         y_train_df = pd.DataFrame(train_data[self.label_name])
         y_test_df = pd.DataFrame(test_data[self.label_name])
         if self.is_oot:
@@ -251,57 +279,50 @@ class data_obtain():
             y_oot_df = pd.DataFrame(oot_data[self.label_name])
         x_train_df = train_data.drop([self.label_name], axis=1)
         x_test_df = test_data.drop([self.label_name], axis=1)
-        '''
-        策略选择
-        '''
-        #传统回归预测价格,预测价格
-        if strategy == '1':
-            pass
-        #比前一天高就是好样本日
-        elif strategy == '2':
-            y_train_df = strategy_2(y_train_df,self.label_name)
-            y_test_df = strategy_2(y_test_df,self.label_name)
-            if self.is_oot:
-                y_oot_df = strategy_2(y_oot_df,self.label_name)
-                oot_data = pd.concat([x_oot_df, y_oot_df], axis=0)
-            train_data = pd.concat([x_train_df,y_train_df],axis=0)
-            test_data = pd.concat([x_test_df, y_test_df],axis=0)
 
-        #滚动策略
-        else:
-            y_train_df = strategy_3(y_train_df,self.label_name)
-            y_test_df = strategy_3(y_test_df,self.label_name)
-            if self.is_oot:
-                y_oot_df = strategy_3(y_oot_df,self.label_name)
-                oot_data = pd.concat([x_oot_df, y_oot_df], axis=0)
-            train_data = pd.concat([x_train_df,y_train_df],axis=0)
-            test_data = pd.concat([x_test_df, y_test_df],axis=0)
-
-        self.clean_data_dir = '{}/temp_file/clean_stock_data'.format(self.current_dir)
         #保存数据清洗结果
-        train_data.to_excel(f'{self.clean_data_dir}//',index=False)
-        test_data.to_excel(f'{self.clean_data_dir}//',index=False)
+        train_data.to_excel(f'{self.clean_data_dir}//{self.stock_code}_train_data.xlsx',index=False)
+        test_data.to_excel(f'{self.clean_data_dir}//{self.stock_code}_test_data.xlsx',index=False)
         if self.is_oot:
-            oot_data.to_excel(f'{self.clean_data_dir}//',index=False)
+            oot_data.to_excel(f'{self.clean_data_dir}//{self.stock_code}_oot_data.xlsx',index=False)
 
 
 
 
+    def data_eda(self):
+        data = pd.read_excel(f'{self.data_dir}/{self.stock_code}_total_data.xlsx.xlsx')
+        import toad
+        eda_table=toad.detect(data)[:10]
+        print(eda_table)
+        # 去掉不做特征的列  算iv要自己写
+        data.set_index(self.key_name,inplace=True)
+        iv_table = toad.quality(data, 'target')[:15]
+        pass
 
+    def data_clean(self):
+        data = pd.read_excel(f'{self.clean_data_dir}/{self.stock_code}_total_data.xlsx.xlsx')
 
+        import toad
+        eda=toad.detect(data)[:10]
 
+        # 分箱也要自己写
+        c = toad.transform.Combiner()
+        c.fit(data, y='target', method='chi',min_samples=0.05)  # empty_separate = False
 
+        # 为了演示，仅展示部分分箱
+        print('var_d2:', c.export()['开盘'])
+        print('var_d5:', c.export()['var_d5'])
+        print('var_d6:', c.export()['var_d6'])
 
+        from toad.plot import bin_plot
 
+        # 看'var_d2'在时间内的分箱
+        col = '开盘'
 
+        bin_plot(c.transform(data[[col, 'target']], labels=True), x=col, target='target')
+        pass
 
-
-
-
-
-
-
-
-if __name__ == '__main__':
-    do = data_obtain()
-    data = do.download()
+    def daily_update(self):
+        stock_code = self.config['stock_code']
+        today =str(datetime.datetime.today().date())
+        beg = today.replace('-', '')
